@@ -1,4 +1,13 @@
-# building
+### rust
+
+just add the dependency to your cargo.toml
+
+```toml
+[dependencies]
+elden-ring-utils-rs = {git="https://github.com/Tacotakedown/elden-ring-util-rs"}
+```
+
+## build from scratch
 
 ### build the cpp lib first
 
@@ -8,16 +17,13 @@ cmake ..
 cmake --build . --config Release
 ```
 
-lib will be built to lib-cpp, from here it will be usable in rust
-
-### rust
-
-just add the dependency to your cargo.toml
-
+now simply call your local rust crate in your cargo.toml
 ```toml
 [dependencies]
-elden-ring-utils-rs = {git="https://github.com/Tacotakedown/elden-ring-util-rs"}
+elden-ring-utils-rs = {path="path/to/crate_root"}
 ```
+
+lib will be built to lib-cpp, from here it will be usable in rust
 
 ##
 
