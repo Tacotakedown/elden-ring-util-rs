@@ -16,7 +16,7 @@ just add the dependency to your cargo.toml
 
 ```toml
 [dependencies]
-elden-ring-utils-rs = {git="https://github.com/Tacotakedown/elden-ring-util-rs/tree/master"}
+elden-ring-utils-rs = {git="https://github.com/Tacotakedown/elden-ring-util-rs"}
 ```
 
 ##
