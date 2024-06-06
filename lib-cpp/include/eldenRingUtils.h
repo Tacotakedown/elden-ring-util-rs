@@ -1,98 +1,82 @@
+#ifndef MAIN_C_H
+#define MAIN_C_H
 
-#include <string>
-#include <cstdarg>
-#include <fileapi.h>
-#include <Psapi.h>
-#include <iostream>
-#include <iomanip>
-#include <vector>
-#include <xinput.h>
-#include <sstream>
-#include <filesystem>
-#include <map>
-#include <fstream>
-#include <chrono>
-#include <iomanip>
-
-namespace ModUtils
+#ifdef __cplusplus
+extern "C"
 {
-    extern HWND muWindow;
-    extern std::string muGameName;
-    extern std::string muExpectedWindowName;
-    extern std::ofstream muLogFile;
-    extern const std::string muAobMask;
+#endif
 
-    class Timer
-    {
-    public:
-        Timer(unsigned int intervalMs);
+#include <Windows.h>
+#include <stddef.h>
 
-        bool Check();
+    // Forward declarations for C++ functions
+    typedef void *TimerPtr;
+    typedef void *FileHandle;
+    typedef void *WindowHandle;
 
-        void Reset();
+    TimerPtr CreateTimer(unsigned int intervalMs);
+    int CheckTimer(TimerPtr timer);
+    // void ResetTimer(TimerPtr timer);
+    // void DestroyTimer(TimerPtr timer);
 
-    private:
-        unsigned int intervalMs;
-        bool firstCheck;
-        std::chrono::system_clock::time_point lastPassedCheckTime;
-    };
+    const char *_GetModuleName(bool mainProcessModule);
 
-    std::string GetCurrentProcessName();
+    const char *GetCurrentProcessName();
+    const char *GetCurrentModName();
+    const char *GetModFolderPath();
 
-    std::string GetCurrentModName();
+    const char *FindDLL(const char *base_folder, const char *dll_name);
 
-    std::string GetModFolderPath();
+    int replace(char *str, const char *from, const char *to);
 
-    std::string FindDLL(const std::filesystem::path &base_folder, const std::string &dll_name);
+    void ShowErrorPopup(const char *error);
 
-    bool replace(std::string &str, const std::string &from, const std::string &to);
-
-    void ShowErrorPopup(std::string error);
+    uintptr_t RelativeToAbsoluteAddress(uintptr_t relativeAddressLocation);
 
     DWORD_PTR GetProcessBaseAddress(DWORD processId);
 
-    void ToggleMemoryProtection(bool protectionEnabled, uintptr_t address, size_t size);
+    void ToggleMemoryProtection(int protectionEnabled, uintptr_t address, size_t size);
 
     void MemCopy(uintptr_t destination, uintptr_t source, size_t numBytes);
 
     void MemSet(uintptr_t address, unsigned char byte, size_t numBytes);
 
-    uintptr_t RelativeToAbsoluteAddress(uintptr_t relativeAddressLocation);
+    const char **TokenifyAobString(const char *aob);
 
-    std::vector<std::string> TokenifyAobString(std::string aob);
+    int IsAobValid(const char **aobTokens);
 
-    bool IsAobValid(std::vector<std::string> aobTokens);
+    int VerifyAob(const char *aob);
 
-    bool VerifyAob(std::string aob);
+    int VerifyAobs(const char **aobs);
 
-    bool VerifyAobs(std::vector<std::string> aobs);
+    const char *NumberToHexString(uintptr_t number);
 
-    template <typename T>
-    std::string NumberToHexString(T number);
+    uintptr_t AobScan(const char *aob);
 
-    uintptr_t AobScan(std::string aob);
+    unsigned char *StringAobToRawAob(const char *aob);
 
-    std::vector<unsigned char> StringAobToRawAob(std::string aob);
+    const char *RawAobToStringAob(unsigned char *rawAob);
 
-    std::string RawAobToStringAob(std::vector<unsigned char> rawAob);
+    int CheckIfAobsMatch(const char *aob1, const char *aob2);
 
-    bool CheckIfAobsMatch(std::string aob1, std::string aob2);
+    int ReplaceExpectedBytesAtAddress(uintptr_t address, const char *expectedBytes, const char *newBytes);
 
-    bool ReplaceExpectedBytesAtAddress(uintptr_t address, std::string expectedBytes, std::string newBytes);
+    void GetWindowHandleByName(const char *windowName);
 
-    void GetWindowHandleByName(std::string windowName);
-
-    BOOL CALLBACK EnumWindowHandles(HWND hwnd, LPARAM lParam);
+    // BOOL EnumWindowHandles(HWND hwnd, LPARAM lParam);
 
     void GetWindowHandleByEnumeration();
 
-    bool GetWindowHandle();
+    int GetWindowHandle();
 
     void AttemptToGetWindowHandle();
 
-    bool AreKeysPressed(std::vector<unsigned short> keys, bool trueWhileHolding = false, bool checkController = false);
+    // int AreKeysPressed(unsigned short *keys, int keysCount, int trueWhileHolding, int checkController);
 
-    bool AreKeysPressed(unsigned short key, bool trueWhileHolding = false, bool checkController = false);
+    void Hook(uintptr_t address, uintptr_t destination, size_t extraClearance);
 
-    void Hook(uintptr_t address, uintptr_t destination, size_t extraClearance = 0);
+#ifdef __cplusplus
 }
+#endif
+
+#endif // MAIN_C_H

@@ -6,8 +6,9 @@
 mkdir build && cd build
 cmake ..
 cmake --build . --config Release
-# right not the lib is not automatically copied to rust lib, ill add that later
 ```
+
+lib will be built to lib-cpp, from here it will be usable in rust
 
 ### rust
 
