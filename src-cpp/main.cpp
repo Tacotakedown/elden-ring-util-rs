@@ -233,11 +233,11 @@ void GetWindowHandleByName(const char *windowName)
     ModUtils::GetWindowHandleByName(windowNameString);
 }
 
-// BOOL EnumWindowHandles(HWND hwnd, LPARAM lParam)
-// {
-//     BOOL result = ModUtils::EnumWindowHandles(hwnd, lParam);
-//     return result;
-// }
+BOOL EnumWindowHandles(HWND hwnd, LPARAM lParam)
+{
+    BOOL result = ModUtils::EnumWindowHandles(hwnd, lParam);
+    return result;
+}
 
 void GetWindowHandleByEnumeration()
 {

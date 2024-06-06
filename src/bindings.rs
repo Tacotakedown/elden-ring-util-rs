@@ -1,254 +1,285 @@
-use std::ffi::c_void;
+use libc::{c_char, c_int, c_uchar, c_uint, c_void, size_t};
+use std::ffi::{CStr, CString};
+use winapi::shared::basetsd::DWORD_PTR;
+use winapi::shared::minwindef::LPARAM;
+use winapi::shared::minwindef::{BOOL, DWORD, HINSTANCE};
 
-pub type HWND = *mut std::ffi::c_void;
-pub type DWORD_PTR = usize;
-
-pub const PAGE_EXECUTE_READWRITE: u32 = 0x40;
-pub const PROCESS_ALL_ACCESS: u32 = 0x1F0FFF;
-
-#[repr(C)]
-pub struct MEMORY_BASIC_INFORMATION {
-    pub BaseAddress: *mut std::ffi::c_void,
-    pub AllocationBase: *mut std::ffi::c_void,
-    pub AllocationProtect: u32,
-    pub RegionSize: usize,
-    pub State: u32,
-    pub Protect: u32,
-    pub Type: u32,
-}
-
+#[link(name = "eldenRingUtils")]
 extern "C" {
-    pub fn GetModuleHandleA(lpModuleName: *const i8) -> *mut std::ffi::c_void;
-    pub fn GetModuleHandleExA(
-        dwFlags: u32,
-        lpModuleName: *const i8,
-        phModule: *mut *mut std::ffi::c_void,
-    ) -> i32;
-    pub fn GetModuleFileNameA(
-        hModule: *mut std::ffi::c_void,
-        lpFilename: *mut i8,
-        nSize: u32,
-    ) -> u32;
-    pub fn MessageBoxA(hWnd: HWND, lpText: *const i8, lpCaption: *const i8, uType: u32) -> i32;
-    pub fn OpenProcess(
-        dwDesiredAccess: u32,
-        bInheritHandle: i32,
-        dwProcessId: u32,
-    ) -> *mut std::ffi::c_void;
-    pub fn EnumProcessModules(
-        hProcess: *mut std::ffi::c_void,
-        lphModule: *mut *mut std::ffi::c_void,
-        cb: u32,
-        lpcbNeeded: *mut u32,
-    ) -> i32;
-    pub fn EnumWindows(lpEnumFunc: *const std::ffi::c_void, lParam: *const std::ffi::c_void)
-        -> i32;
-    pub fn FindWindowExA(
-        hwndParent: HWND,
-        hwndChildAfter: HWND,
-        lpszClass: *const i8,
-        lpszWindow: *const i8,
-    ) -> HWND;
-    pub fn GetWindowThreadProcessId(hwnd: HWND, lpdwProcessId: *mut u32) -> u32;
-    pub fn GetWindowTextA(hwnd: HWND, lpString: *mut i8, nMaxCount: i32) -> i32;
-    pub fn VirtualQuery(
-        lpAddress: *const std::ffi::c_void,
-        lpBuffer: *mut MEMORY_BASIC_INFORMATION,
-        dwLength: usize,
-    ) -> usize;
-    pub fn VirtualProtect(
-        lpAddress: *mut std::ffi::c_void,
-        dwSize: usize,
-        flNewProtect: u32,
-        lpflOldProtect: *mut u32,
-    ) -> i32;
-    pub fn GetCurrentProcessId() -> u32;
-    pub fn GetLastError() -> u32;
-    pub fn LocalAlloc(uFlags: u32, uBytes: usize) -> *mut std::ffi::c_void;
-    pub fn LocalFree(hMem: *mut std::ffi::c_void);
-    pub fn CloseHandle(hObject: *mut std::ffi::c_void) -> i32;
-    pub fn Sleep(dwMilliseconds: u32);
-    pub fn memcpy(
-        dest: *mut std::ffi::c_void,
-        src: *const std::ffi::c_void,
-        count: usize,
-    ) -> *mut std::ffi::c_void;
-    pub fn memset(dest: *mut std::ffi::c_void, val: i32, count: usize) -> *mut std::ffi::c_void;
-    pub fn GetCurrentProcess() -> *mut std::ffi::c_void;
-    pub fn GetProcessId(hProcess: *mut std::ffi::c_void) -> u32;
-    pub fn EnumProcessModules(
-        hProcess: *mut std::ffi::c_void,
-        lphModule: *mut *mut std::ffi::c_void,
-        cb: u32,
-        lpcbNeeded: *mut u32,
-    ) -> i32;
+    fn CreateTimer(intervalMs: c_uint) -> *mut c_void;
+    fn CheckTimer(timer: *mut c_void) -> c_int;
+    //  fn ResetTimer(timer: *mut c_void);
+    //  fn DestroyTimer(timer: *mut c_void);
+
+    fn _GetModuleName(mainProcessModule: BOOL) -> *const c_char;
+    fn GetCurrentProcessName() -> *const c_char;
+    fn GetCurrentModName() -> *const c_char;
+    fn GetModFolderPath() -> *const c_char;
+
+    fn FindDLL(base_folder: *const c_char, dll_name: *const c_char) -> *const c_char;
+    fn replace(str: *mut c_char, from: *const c_char, to: *const c_char) -> c_int;
+    fn ShowErrorPopup(error: *const c_char);
+
+    fn RelativeToAbsoluteAddress(relativeAddressLocation: DWORD_PTR) -> DWORD_PTR;
+    fn GetProcessBaseAddress(processId: DWORD) -> DWORD_PTR;
+    fn ToggleMemoryProtection(protectionEnabled: c_int, address: DWORD_PTR, size: size_t);
+    fn MemCopy(destination: DWORD_PTR, source: DWORD_PTR, numBytes: size_t);
+    fn MemSet(address: DWORD_PTR, byte: c_uchar, numBytes: size_t);
+
+    fn TokenifyAobString(aob: *const c_char) -> *const *const c_char;
+    fn IsAobValid(aobTokens: *const *const c_char) -> c_int;
+    fn VerifyAob(aob: *const c_char) -> c_int;
+    fn VerifyAobs(aobs: *const *const c_char) -> c_int;
+
+    fn NumberToHexString(number: DWORD_PTR) -> *const c_char;
+    fn AobScan(aob: *const c_char) -> DWORD_PTR;
+
+    fn StringAobToRawAob(aob: *const c_char) -> *mut c_uchar;
+    fn RawAobToStringAob(rawAob: *mut c_uchar) -> *const c_char;
+
+    fn CheckIfAobsMatch(aob1: *const c_char, aob2: *const c_char) -> c_int;
+    fn ReplaceExpectedBytesAtAddress(
+        address: DWORD_PTR,
+        expectedBytes: *const c_char,
+        newBytes: *const c_char,
+    ) -> c_int;
+
+    fn GetWindowHandleByName(windowName: *const c_char);
+    fn EnumWindowHandles(hwnd: HINSTANCE, lParam: LPARAM) -> BOOL;
+    fn GetWindowHandleByEnumeration();
+    fn GetWindowHandle() -> c_int;
+    fn AttemptToGetWindowHandle();
+
+    //  fn AreKeysPressed(keys: *const c_ushort, keysCount: c_int, trueWhileHolding: c_int, checkController: c_int) -> c_int;
+    fn Hook(address: DWORD_PTR, destination: DWORD_PTR, extraClearance: size_t);
 }
 
-pub fn get_module_handle(lp_module_name: &str) -> Option<*mut c_void> {
-    let module_name = CString::new(lp_module_name).expect("CString::new failed");
-    let result = unsafe { GetModuleHandleA(module_name.as_ptr()) };
-    if result.is_null() {
-        None
-    } else {
-        Some(result)
+pub struct Timer {
+    ptr: *mut c_void,
+}
+
+impl Timer {
+    pub fn new(interval_ms: u32) -> Self {
+        unsafe {
+            let ptr = CreateTimer(interval_ms);
+            Timer { ptr }
+        }
+    }
+
+    pub fn check(&self) -> bool {
+        unsafe { CheckTimer(self.ptr) != 0 }
     }
 }
 
-pub fn get_module_file_name(h_module: *mut c_void) -> Option<String> {
-    let mut filename_buf = vec![0i8; 260];
-    let result = unsafe {
-        GetModuleFileNameA(
-            h_module,
-            filename_buf.as_mut_ptr(),
-            filename_buf.len() as u32,
-        )
-    };
-    if result == 0 {
-        None
-    } else {
-        let filename = CString::from_vec_unchecked(filename_buf)
-            .into_string()
-            .expect("Failed to convert filename to String");
-        Some(filename)
+impl Drop for Timer {
+    fn drop(&mut self) {
+        //TODO: Reset() or Destroy(), needs to be implemented in cpp then c then we can do it here
     }
 }
 
-pub fn message_box(hWnd: HWND, lp_text: &str, lp_caption: &str, u_type: u32) -> c_int {
-    let text = CString::new(lp_text).expect("CString::new failed");
-    let caption = CString::new(lp_caption).expect("CString::new failed");
-    unsafe { MessageBoxA(hWnd, text.as_ptr(), caption.as_ptr(), u_type) }
-}
-
-pub fn enum_windows(
-    lp_enum_func: Option<extern "C" fn(HWND, *const c_void) -> c_int>,
-    lParam: *const c_void,
-) -> c_int {
-    let result = unsafe {
-        EnumWindows(
-            lp_enum_func.map_or(null_mut(), |f| f as *const c_void),
-            lParam,
-        )
-    };
-    result
-}
-
-pub fn find_window_ex(
-    hwnd_parent: HWND,
-    hwnd_child_after: HWND,
-    lpsz_class: &str,
-    lpsz_window: &str,
-) -> HWND {
-    let class_name = CString::new(lpsz_class).expect("CString::new failed");
-    let window_name = CString::new(lpsz_window).expect("CString::new failed");
-    let result = unsafe {
-        FindWindowExA(
-            hwnd_parent,
-            hwnd_child_after,
-            class_name.as_ptr(),
-            window_name.as_ptr(),
-        )
-    };
-    result
-}
-
-pub fn get_window_thread_process_id(hwnd: HWND) -> Option<u32> {
-    let mut process_id: u32 = 0;
-    let result = unsafe { GetWindowThreadProcessId(hwnd, &mut process_id as *mut u32) };
-    if result == 0 {
-        None
-    } else {
-        Some(process_id)
+fn c_str_to_string(c_str: *const c_char) -> String {
+    unsafe {
+        if c_str.is_null() {
+            String::new()
+        } else {
+            CStr::from_ptr(c_str).to_string_lossy().into_owned()
+        }
     }
 }
 
-pub fn get_window_text(hwnd: HWND) -> Option<String> {
-    let mut text_buf = vec![0i8; 260];
-    let result = unsafe { GetWindowTextA(hwnd, text_buf.as_mut_ptr(), text_buf.len() as i32) };
-    if result == 0 {
-        None
-    } else {
-        let text = CString::from_vec_unchecked(text_buf)
-            .into_string()
-            .expect("Failed to convert text to String");
-        Some(text)
+pub fn get_module_name(main_process_module: bool) -> String {
+    unsafe { c_str_to_string(_GetModuleName(main_process_module as BOOL)) }
+}
+
+pub fn get_current_process_name() -> String {
+    unsafe { c_str_to_string(GetCurrentProcessName()) }
+}
+
+pub fn get_current_mod_name() -> String {
+    unsafe { c_str_to_string(GetCurrentModName()) }
+}
+
+pub fn get_mod_folder_path() -> String {
+    unsafe { c_str_to_string(GetModFolderPath()) }
+}
+
+pub fn find_dll(base_folder: &str, dll_name: &str) -> String {
+    let base_folder = CString::new(base_folder).unwrap();
+    let dll_name = CString::new(dll_name).unwrap();
+    unsafe { c_str_to_string(FindDLL(base_folder.as_ptr(), dll_name.as_ptr())) }
+}
+
+pub fn replace_in_string(str: &mut String, from: &str, to: &str) -> bool {
+    let from = CString::new(from).unwrap();
+    let to = CString::new(to).unwrap();
+    let mut c_str = CString::new(str.as_str()).unwrap();
+    unsafe {
+        let result = replace(c_str.as_ptr() as *mut c_char, from.as_ptr(), to.as_ptr());
+        if result != 0 {
+            str.clear();
+            str.push_str(c_str.to_str().unwrap());
+            true
+        } else {
+            false
+        }
     }
 }
 
-pub fn virtual_query(
-    lp_address: *const c_void,
-    lp_buffer: *mut MEMORY_BASIC_INFORMATION,
-    dw_length: usize,
-) -> usize {
-    unsafe { VirtualQuery(lp_address, lp_buffer, dw_length) }
+pub fn show_error_popup(error: &str) {
+    let error = CString::new(error).unwrap();
+    unsafe {
+        ShowErrorPopup(error.as_ptr());
+    }
 }
 
-pub fn virtual_protect(
-    lp_address: *mut c_void,
-    dw_size: usize,
-    fl_new_protect: u32,
-    lpfl_old_protect: *mut u32,
-) -> c_int {
-    unsafe { VirtualProtect(lp_address, dw_size, fl_new_protect, lpfl_old_protect) }
+pub fn relative_to_absolute_address(relative_address_location: DWORD_PTR) -> DWORD_PTR {
+    unsafe { RelativeToAbsoluteAddress(relative_address_location) }
 }
 
-pub fn get_current_process_id() -> u32 {
-    unsafe { GetCurrentProcessId() }
+pub fn get_process_base_address(process_id: DWORD) -> DWORD_PTR {
+    unsafe { GetProcessBaseAddress(process_id) }
 }
 
-pub fn get_last_error() -> u32 {
-    unsafe { GetLastError() }
+pub fn toggle_memory_protection(protection_enabled: bool, address: DWORD_PTR, size: usize) {
+    unsafe {
+        ToggleMemoryProtection(protection_enabled as c_int, address, size);
+    }
 }
 
-pub fn local_alloc(u_flags: u32, u_bytes: usize) -> *mut c_void {
-    unsafe { LocalAlloc(u_flags, u_bytes) }
+pub fn mem_copy(destination: DWORD_PTR, source: DWORD_PTR, num_bytes: usize) {
+    unsafe {
+        MemCopy(destination, source, num_bytes);
+    }
 }
 
-pub fn local_free(h_mem: *mut c_void) {
-    unsafe { LocalFree(h_mem) }
+pub fn mem_set(address: DWORD_PTR, byte: u8, num_bytes: usize) {
+    unsafe {
+        MemSet(address, byte, num_bytes);
+    }
 }
 
-pub fn close_handle(h_object: *mut c_void) -> c_int {
-    unsafe { CloseHandle(h_object) }
+pub fn tokenify_aob_string(aob: &str) -> Vec<String> {
+    let aob = CString::new(aob).unwrap();
+    unsafe {
+        let tokenified_aob = TokenifyAobString(aob.as_ptr());
+        if tokenified_aob.is_null() {
+            vec![]
+        } else {
+            let mut tokens = vec![];
+            let mut current = tokenified_aob;
+            while !(*current).is_null() {
+                tokens.push(CStr::from_ptr(*current).to_string_lossy().into_owned());
+                current = current.add(1);
+            }
+            tokens
+        }
+    }
 }
 
-pub fn sleep(dw_milliseconds: u32) {
-    unsafe { Sleep(dw_milliseconds) }
+pub fn is_aob_valid(aob_tokens: &[String]) -> bool {
+    let c_aob_tokens: Vec<CString> = aob_tokens
+        .iter()
+        .map(|s| CString::new(s.as_str()).unwrap())
+        .collect();
+    let c_aob_tokens_ptrs: Vec<*const c_char> = c_aob_tokens.iter().map(|s| s.as_ptr()).collect();
+    unsafe { IsAobValid(c_aob_tokens_ptrs.as_ptr()) != 0 }
 }
 
-pub fn memcpy(dest: *mut c_void, src: *const c_void, count: usize) {
-    unsafe { memcpy(dest, src, count) };
+pub fn verify_aob(aob: &str) -> bool {
+    let aob = CString::new(aob).unwrap();
+    unsafe { VerifyAob(aob.as_ptr()) != 0 }
 }
 
-pub fn memset(dest: *mut c_void, val: c_int, count: usize) {
-    unsafe { memset(dest, val, count) };
+pub fn verify_aobs(aobs: &[String]) -> bool {
+    let c_aobs: Vec<CString> = aobs
+        .iter()
+        .map(|s| CString::new(s.as_str()).unwrap())
+        .collect();
+    let c_aobs_ptrs: Vec<*const c_char> = c_aobs.iter().map(|s| s.as_ptr()).collect();
+    unsafe { VerifyAobs(c_aobs_ptrs.as_ptr()) != 0 }
 }
 
-pub fn get_current_process() -> *mut c_void {
-    unsafe { GetCurrentProcess() }
+pub fn number_to_hex_string(number: DWORD_PTR) -> String {
+    unsafe { c_str_to_string(NumberToHexString(number)) }
 }
 
-pub fn get_process_id(h_process: *mut c_void) -> u32 {
-    unsafe { GetProcessId(h_process) }
+pub fn aob_scan(aob: &str) -> DWORD_PTR {
+    let aob = CString::new(aob).unwrap();
+    unsafe { AobScan(aob.as_ptr()) }
 }
 
-pub fn enum_process_modules(h_process: *mut c_void) -> Option<Vec<*mut c_void>> {
-    let mut module_array: Vec<*mut c_void> = vec![null_mut(); 1024];
-    let mut bytes_required: u32 = 0;
-    let result = unsafe {
-        EnumProcessModules(
-            h_process,
-            module_array.as_mut_ptr(),
-            (module_array.len() * std::mem::size_of::<*mut c_void>()) as u32,
-            &mut bytes_required as *mut u32,
-        )
-    };
-    if result == 0 {
-        None
-    } else {
-        module_array.resize(
-            bytes_required as usize / std::mem::size_of::<*mut c_void>(),
-            null_mut(),
-        );
-        Some(module_array)
+pub fn string_aob_to_raw_aob(aob: &str) -> Vec<u8> {
+    let aob = CString::new(aob).unwrap();
+    unsafe {
+        let raw_aob_ptr = StringAobToRawAob(aob.as_ptr());
+        if raw_aob_ptr.is_null() {
+            vec![]
+        } else {
+            let mut raw_aob = vec![];
+            let mut current = raw_aob_ptr;
+            while *current != 0 {
+                raw_aob.push(*current);
+                current = current.add(1);
+            }
+            raw_aob
+        }
+    }
+}
+
+pub fn raw_aob_to_string_aob(raw_aob: &[u8]) -> String {
+    unsafe {
+        let raw_aob_ptr = raw_aob.as_ptr() as *mut c_uchar;
+        c_str_to_string(RawAobToStringAob(raw_aob_ptr))
+    }
+}
+
+pub fn check_if_aobs_match(aob1: &str, aob2: &str) -> bool {
+    let aob1 = CString::new(aob1).unwrap();
+    let aob2 = CString::new(aob2).unwrap();
+    unsafe { CheckIfAobsMatch(aob1.as_ptr(), aob2.as_ptr()) != 0 }
+}
+
+pub fn replace_expected_bytes_at_address(
+    address: DWORD_PTR,
+    expected_bytes: &str,
+    new_bytes: &str,
+) -> bool {
+    let expected_bytes = CString::new(expected_bytes).unwrap();
+    let new_bytes = CString::new(new_bytes).unwrap();
+    unsafe {
+        ReplaceExpectedBytesAtAddress(address, expected_bytes.as_ptr(), new_bytes.as_ptr()) != 0
+    }
+}
+
+pub fn get_window_handle_by_name(window_name: &str) {
+    let window_name = CString::new(window_name).unwrap();
+    unsafe {
+        GetWindowHandleByName(window_name.as_ptr());
+    }
+}
+
+pub fn enum_window_handles(hwnd: HINSTANCE, l_param: LPARAM) -> bool {
+    unsafe { EnumWindowHandles(hwnd, l_param) != 0 }
+}
+
+pub fn get_window_handle_by_enumeration() {
+    unsafe {
+        GetWindowHandleByEnumeration();
+    }
+}
+
+pub fn get_window_handle() -> i32 {
+    unsafe { GetWindowHandle() }
+}
+
+pub fn attempt_to_get_window_handle() {
+    unsafe {
+        AttemptToGetWindowHandle();
+    }
+}
+
+pub fn hook(address: DWORD_PTR, destination: DWORD_PTR, extra_clearance: usize) {
+    unsafe {
+        Hook(address, destination, extra_clearance);
     }
 }
