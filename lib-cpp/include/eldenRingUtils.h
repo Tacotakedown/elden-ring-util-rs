@@ -63,7 +63,7 @@ extern "C"
 
     void GetWindowHandleByName(const char *windowName);
 
-    // BOOL EnumWindowHandles(HWND hwnd, LPARAM lParam);
+    BOOL EnumWindowHandles(HWND hwnd, LPARAM lParam);
 
     void GetWindowHandleByEnumeration();
 

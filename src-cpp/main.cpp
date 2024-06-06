@@ -166,13 +166,13 @@ int VerifyAobs(const char **abo)
     return isValid ? 1 : 0;
 }
 
-// const char *NumberToHexString(uintptr_t number)
-// {
-//     std::string hex = ModUtils::NumberToHexString(number);
-//     char *cHex = new char[hex.length() + 1];
-//     strcpy(cHex, hex.c_str());
-//     return cHex;
-// }
+const char *NumberToHexString(uintptr_t number)
+{
+    std::string hex = ModUtils::NumberToHexString(number);
+    char *cHex = new char[hex.length() + 1];
+    strcpy(cHex, hex.c_str());
+    return cHex;
+}
 
 uintptr_t AobScan(const char *aob)
 {
